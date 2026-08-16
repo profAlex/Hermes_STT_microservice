@@ -1,0 +1,24 @@
+{
+  "name": "hermes-voice-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test:stage1": "tsx src/testStage1.ts",
+    "test:stage2": "tsx src/testStage2.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "node-record-lpcm16": "^1.0.1",
+    "node-vad": "^1.1.4"
+  }
+}
