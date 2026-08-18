@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { cpus } from 'node:os';
 
 const execFileAsync = promisify(execFile);
 
@@ -9,6 +10,7 @@ export interface WhisperConfig {
     whisperCliPath: string; // Путь к бинарнику whisper-cli
     modelPath: string;      // Путь к .bin модели (small / medium)
     language?: string;       // Язык (по умолчанию 'ru')
+    threads?: number; // Опциональное переопределение
 }
 
 export class WhisperService {
@@ -31,6 +33,9 @@ export class WhisperService {
 
         const pcmData = Buffer.concat(pcmChunks);
         const tempWavPath = join('/tmp', `vad_speech_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.wav`);
+        const threadsCount = this.config.threads || cpus().length || 4;
+
+        console.log('THREADS USED:', threadsCount);
 
         try {
             // 1. Формируем честный WAV-файл с RIFF заголовком
@@ -48,6 +53,7 @@ export class WhisperService {
                     '-f', tempWavPath,
                     '-l', this.config.language || 'ru',
                     '-nt', // Без временных меток
+                    '-t', String(threadsCount), // количество потоков
                 ],
                 { timeout: 15000 }
             );
