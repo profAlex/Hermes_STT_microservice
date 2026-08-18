@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test:stage1": "tsx src/testStage1.ts",
-    "test:stage2": "tsx src/testStage2.ts"
+    "test:stage2": "tsx src/testStage2.ts",
+    "test:stage3": "tsx src/testStage3.ts"
   },
   "keywords": [],
   "author": "",
