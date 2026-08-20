@@ -1,5 +1,12 @@
 import recorder from 'node-record-lpcm16';
 import WebSocket from 'ws';
+import {fileURLToPath} from "url";
+import path from "path";
+import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Читаем адрес сервера из переменной окружения или используем дефолтный localhost
 const SERVER_URL = process.env.SERVER_URL || 'ws://localhost:8085';

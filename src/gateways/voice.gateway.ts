@@ -15,7 +15,9 @@ export class VoiceGateway {
         private vadService: VADService,
         private whisperService: WhisperService
     ) {
-        this.wss = new WebSocketServer({ port: this.config.port });
+        this.wss = new WebSocketServer({ port: this.config.port,
+            // host: '0.0.0.0' // ОБЯЗАТЕЛЬНО для приема внешних подключений по LAN
+             });
         this.init();
     }
 

@@ -45,12 +45,14 @@ export class WhisperService {
                 try {
                     return await this.runWhisperCli(this.config.whisperCudaCliPath, tempWavPath);
                 } catch (cudaError) {
-                    console.warn('⚠️ [WhisperService] Ошибка CUDA/GPU (возможно, OOM). Падение сгенерировало откат на CPU...');
+                    console.warn('⚠️ [WhisperService] Ошибка CUDA/GPU (возможно, OOM). Переход на CPU...');
                 }
             }
 
             // 3. Попытка №2: CPU (резервный основной вариант)
+            // Использование явного значения из .env или fallback на все доступные ядра
             const threads = this.config.cpuThreads || cpus().length || 4;
+
             return await this.runWhisperCli(this.config.whisperCpuCliPath, tempWavPath, ['-t', String(threads)]);
 
         } catch (error) {
@@ -71,10 +73,17 @@ export class WhisperService {
             '-f', wavPath,
             '-l', this.config.language || 'ru',
             '-nt',
+            '-bs', '1',              // Beam search size = 1 (ускоряет обработку)
+            '--no-fallback',         // Отключаем повторные проходы при неуверенности
             ...extraArgs,
         ];
 
-        const { stdout } = await execFileAsync(cliPath, args, { timeout: 15000 });
+        // Увеличен timeout и maxBuffer для предотвращения падающих SIGTERM по длине фразы
+        const { stdout } = await execFileAsync(cliPath, args, {
+            timeout: 120000,
+            maxBuffer: 10 * 1024 * 1024
+        });
+
         return stdout.trim();
     }
 

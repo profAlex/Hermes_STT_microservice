@@ -7,8 +7,9 @@
     "test:stage1": "tsx src/testStage1.ts",
     "test:stage2": "tsx src/testStage2.ts",
     "test:stage3": "tsx src/testStage3.ts",
-    "start:gateway": "tsx src/index.ts",
-    "start:client": "tsx src/client/cli-client.ts"
+    "start:gateway": "tsx src/server.ts",
+    "start:client": "tsx src/clients/cli-client.ts",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",

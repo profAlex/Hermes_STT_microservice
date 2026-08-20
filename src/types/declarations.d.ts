@@ -16,6 +16,8 @@ declare module 'node-vad' {
     export interface VADClass {
         new (mode?: Mode): {
             processAudio(chunk: Buffer, sampleRate: number): Promise<Event>;
+            // Добавлен синхронный метод, возвращающий Event напрямую (без Promise)
+            processAudioSync(chunk: Buffer, sampleRate: number): Event;
         };
         Mode: typeof Mode;
         Event: typeof Event;
