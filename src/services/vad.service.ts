@@ -9,7 +9,7 @@ export interface VADConfig {
     minEnergyThreshold: number;
 }
 
-export class VoiceActivityDetector {
+export class VADService {
     private vad: InstanceType<typeof VAD>;
     private config: VADConfig;
 

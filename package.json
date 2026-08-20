@@ -6,7 +6,9 @@
   "scripts": {
     "test:stage1": "tsx src/testStage1.ts",
     "test:stage2": "tsx src/testStage2.ts",
-    "test:stage3": "tsx src/testStage3.ts"
+    "test:stage3": "tsx src/testStage3.ts",
+    "start:gateway": "tsx src/index.ts",
+    "start:client": "tsx src/client/cli-client.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,12 +16,14 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
     "node-record-lpcm16": "^1.0.1",
-    "node-vad": "^1.1.4"
+    "node-vad": "^1.1.4",
+    "ws": "^8.21.3"
   }
 }

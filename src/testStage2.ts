@@ -2,7 +2,7 @@ import record from 'node-record-lpcm16';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { VoiceActivityDetector } from './vadService.js';
+import { VADService } from './services/vad.service.js';
 
 dotenv.config();
 
@@ -31,7 +31,7 @@ async function runStage2Test() {
         }
     });
 
-    const vadDetector = new VoiceActivityDetector({
+    const vadDetector = new VADService({
         silenceThresholdMs: 1200,    // Поставим 1.2 секунды паузы
         speechMinDurationMs: 400,
         minEnergyThreshold: 2000,     // RMS Программная отсечка по громкости (RMS Power) Чем ВЫШЕ число, тем МЕНЕЕ чувствителен к шуму микрофон (попробуйте 400-800)
