@@ -44,6 +44,7 @@ async function runStage3Test() {
         cpuThreads: process.env.WHISPER_CPU_THREADS ? Number.parseInt(process.env.WHISPER_CPU_THREADS, 10) : undefined,
     });
 
+
     // 3. Захват потока с микрофона
     console.log(`🎙️ Запуск микрофона (${recorderType}, ${sampleRate}Hz, ${channels}ch)...`);
     const recording = record.record({

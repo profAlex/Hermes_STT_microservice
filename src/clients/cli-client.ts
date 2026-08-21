@@ -47,20 +47,50 @@ export class VoiceCliClient {
         });
     }
 
-    private startMicrophone(): void {
-        console.log('🎙️ [Client] Запуск записи с микрофона (SoX)... Скажите что-нибудь!');
+    // private startMicrophone(): void {
+    //     console.log('🎙️ [Client] Запуск записи с микрофона (SoX)... Скажите что-нибудь!');
+    //
+    //     // Запускаем SoX через утилиту node-record-lpcm16
+    //     this.recordingProcess = recorder.record({
+    //         sampleRate: 16000,
+    //         channels: 1,
+    //         audioType: 'raw', // Передаем чистый PCM без WAV-заголовка
+    //         recorder: 'sox',  // Используем SoX в PulseAudio/PipeWire
+    //     });
+    //
+    //     const stream = this.recordingProcess.stream();
+    //
+    //     // Пробрасываем байты от SoX напрямую в WebSocket
+    //     stream.on('data', (chunk: Buffer) => {
+    //         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+    //             this.ws.send(chunk);
+    //         }
+    //     });
+    //
+    //     stream.on('error', (err: any) => {
+    //         console.error('⚠️ [Client] Ошибка аудиозаписи SoX:', err);
+    //     });
+    // }
 
-        // Запускаем SoX через утилиту node-record-lpcm16
+
+    private startMicrophone(): void {
+        console.log('🎙️ [Client] Запуск записи с микрофона... Скажите что-нибудь!');
+
         this.recordingProcess = recorder.record({
             sampleRate: 16000,
             channels: 1,
-            audioType: 'raw', // Передаем чистый PCM без WAV-заголовка
-            recorder: 'sox',  // Используем SoX в PulseAudio/PipeWire
+            audioType: 'raw',        // Чистый PCM без WAV заголовка
+            recorder: 'rec',         // Или 'arecord'
+            threshold: 0,            // Отключаем внутреннюю отсечку SoX
+            // Передаем параметры формата прямо утилите rec/sox:
+            // -e signed-integer (знаковое целое)
+            // -b 16 (16 бит)
+            // -L (Little Endian)
+            extraArgs: ['-e', 'signed-integer', '-b', '16', '-L']
         });
 
         const stream = this.recordingProcess.stream();
 
-        // Пробрасываем байты от SoX напрямую в WebSocket
         stream.on('data', (chunk: Buffer) => {
             if (this.ws && this.ws.readyState === WebSocket.OPEN) {
                 this.ws.send(chunk);
@@ -68,9 +98,10 @@ export class VoiceCliClient {
         });
 
         stream.on('error', (err: any) => {
-            console.error('⚠️ [Client] Ошибка аудиозаписи SoX:', err);
+            console.error('⚠️ [Client] Ошибка аудиозаписи:', err);
         });
     }
+
 
     private handleServerEvent(payload: any): void {
         switch (payload.event) {
