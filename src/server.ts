@@ -11,6 +11,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 async function startServer() {
     const cpuCliPath = process.env.WHISPER_CPU_CLI_PATH;
+    const cudaCliPath = process.env.WHISPER_CUDA_CLI_PATH;
     const modelPath = process.env.WHISPER_MODEL_PATH;
     const port = Number.parseInt(process.env.VOICE_GATEWAY_PORT || '3000', 10);
 
@@ -23,11 +24,12 @@ async function startServer() {
     const vadService = new VADService({
         sampleRate: 16000,
         minEnergyThreshold: 400,
-        silenceThresholdMs: 1500,
+        // silenceThresholdMs: 1500,
     });
 
     const whisperService = new WhisperService({
         whisperCpuCliPath: path.resolve(cpuCliPath),
+        whisperCudaCliPath: path.resolve(cudaCliPath || ''),
         modelPath: path.resolve(modelPath),
         language: process.env.WHISPER_LANGUAGE || 'ru',
     });
