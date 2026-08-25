@@ -1,6 +1,6 @@
 import VAD from 'node-vad';
 import { Readable } from 'stream';
-import { AudioFrameSplitter } from './AudioFrameSplitter.js';
+import { AudioFrameSplitter } from './audio-frame-splitter.js';
 
 export interface VADConfig {
     sampleRate: number;

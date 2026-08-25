@@ -32,6 +32,7 @@ async function startServer() {
         whisperCudaCliPath: path.resolve(cudaCliPath || ''),
         modelPath: path.resolve(modelPath),
         language: process.env.WHISPER_LANGUAGE || 'ru',
+        serverUrl: process.env.WHISPER_SERVER_URL // опционально
     });
 
     // 2. Запускаем WebSocket Gateway
