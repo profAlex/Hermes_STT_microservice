@@ -1,5 +1,6 @@
-node_modules/
-out/
-dist/
-src/recordings/
+node-service/node_modules/
+node-service/out/
+node-service/dist/
+node-service/src/recordings/
+node-service/.env
 .env

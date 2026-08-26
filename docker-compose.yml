@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # 1. Cервис Whisper HTTP Server
+  whisper-server:
+    build:
+      context: .
+      dockerfile: whisper-server.Dockerfile
+    container_name: whisper_cuda_server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # Монтируем локальную папку с скачанной моделью в контейнер
+      - ./models:/models:ro
+    environment:
+      - CUDA_VISIBLE_DEVICES=0 # Внутри контейнера проброшенная карта станет GPU #0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1'] # ПРОБРАСЫВАЕМ СТРОГО ВТОРУЮ ВИДЕОКАРТУ (RTX 3060 #2)
+              capabilities: [gpu]
+    # Запуск сервера с твоими флагами оптимизации (-bs 1, --no-fallback)
+    command: >
+      -m /models/ggml-medium.bin
+      --host 0.0.0.0
+      --port 8080
+      -l ru
+      -bs 1
+      --no-fallback
+
+  # 2. Твой Node.js Микросервис (VoiceGateway)
+  node-service:
+    build:
+      context: ./node-service
+      dockerfile: Dockerfile
+    container_name: voice_gateway_service
+    restart: unless-stopped
+    ports:
+      - "${VOICE_GATEWAY_PORT}:${VOICE_GATEWAY_PORT}"
+    env_file:
+      - ./node-service/.env
+    depends_on:
+      whisper-server:
+        condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['1'] # Отдаем ту же 2-ю карту, если сработает CLI Fallback
+              capabilities: [gpu]
