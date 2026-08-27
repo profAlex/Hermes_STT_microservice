@@ -4,3 +4,7 @@ node-service/dist/
 node-service/src/recordings/
 node-service/.env
 .env
+node-service/src/testStage1.ts
+node-service/src/testStage2.ts
+node-service/src/testStage3.ts
+node-service/src/test.ts

@@ -72,7 +72,7 @@ export class WhisperService {
     private async transcribeViaHttp(wavBuffer: Buffer): Promise<string> {
         const formData = new FormData();
 
-        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+        const blob = new Blob([new Uint8Array(wavBuffer)], { type: 'audio/wav' });
         formData.append('file', blob, 'input.wav');
         formData.append('language', this.config.language || 'ru');
         formData.append('response_format', 'json');

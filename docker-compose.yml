@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 1. Cервис Whisper HTTP Server
+  # 1. Cервис Whisper HTTP Server (C++ / CUDA)
   whisper-server:
     build:
       context: .
@@ -11,18 +11,23 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      # Монтируем локальную папку с скачанной моделью в контейнер
       - ./models:/models:ro
+      - whisper-binaries:/app/binaries # Экспортируем собранные бинарники в volume
     environment:
-      - CUDA_VISIBLE_DEVICES=0 # Внутри контейнера проброшенная карта станет GPU #0
+      - CUDA_VISIBLE_DEVICES=0
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1'] # ПРОБРАСЫВАЕМ СТРОГО ВТОРУЮ ВИДЕОКАРТУ (RTX 3060 #2)
+              device_ids: ['1']
               capabilities: [gpu]
-    # Запуск сервера с твоими флагами оптимизации (-bs 1, --no-fallback)
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     command: >
       -m /models/ggml-medium.bin
       --host 0.0.0.0
@@ -31,24 +36,30 @@ services:
       -bs 1
       --no-fallback
 
-  # 2. Твой Node.js Микросервис (VoiceGateway)
+  # 2. Node.js Микросервис (VoiceGateway)
   node-service:
     build:
-      context: ./node-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./node-service/Dockerfile
     container_name: voice_gateway_service
     restart: unless-stopped
     ports:
       - "${VOICE_GATEWAY_PORT}:${VOICE_GATEWAY_PORT}"
     env_file:
       - ./node-service/.env
+    volumes:
+      - ./models:/models:ro
+      - whisper-binaries:/app/binaries:ro # Подключаем бинарники для CLI Fallback
     depends_on:
       whisper-server:
-        condition: service_started
+        condition: service_healthy
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1'] # Отдаем ту же 2-ю карту, если сработает CLI Fallback
+              device_ids: ['1']
               capabilities: [gpu]
+
+volumes:
+  whisper-binaries:
