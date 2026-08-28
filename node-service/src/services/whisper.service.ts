@@ -86,7 +86,9 @@ export class WhisperService {
             throw new Error(`whisper-server returned status ${response.status}: ${response.statusText}`);
         }
 
+
         const data = (await response.json()) as { text?: string };
+        // console.log('RAW WHISPER RESPONSE:', data);
         return (data.text || '').trim();
     }
 

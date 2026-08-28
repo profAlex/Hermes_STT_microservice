@@ -85,7 +85,7 @@ export class VoiceCliClient {
         this.ws.binaryType = 'nodebuffer';
 
         this.ws.on('open', () => {
-            this.startMicrophone();
+            // this.startMicrophone();
         });
 
         this.ws.on('message', (data: WebSocket.RawData) => {
@@ -123,15 +123,24 @@ export class VoiceCliClient {
         stream.on('error', () => {});
     }
 
+    private stopMicrophone(): void {
+        if (this.recordingProcess) {
+            this.recordingProcess.stop();
+        }
+
+    }
+
     private toggleRecording(): void {
         this.isRecording = !this.isRecording;
 
         if (this.isRecording) {
             this.renderActiveStatus();
+            this.startMicrophone();
             // Уведомляем сервер, что началась новая фраза
             this.ws?.send(JSON.stringify({ event: 'start_recording' }));
         } else {
             this.renderPassiveStatus();
+            this.stopMicrophone();
             // Уведомляем сервер, что фраза окончена!
             this.ws?.send(JSON.stringify({ event: 'stop_recording' }));
         }

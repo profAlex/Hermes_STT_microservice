@@ -20,14 +20,14 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['${WHISPER_GPU_ID:-0}']
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 10s
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || wget --spider -q http://localhost:8080/ || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     command: >
       -m /models/ggml-medium.bin
       --host 0.0.0.0
@@ -44,7 +44,7 @@ services:
     container_name: voice_gateway_service
     restart: unless-stopped
     ports:
-      - "${VOICE_GATEWAY_PORT}:${VOICE_GATEWAY_PORT}"
+      - "${VOICE_GATEWAY_PORT:-8085}:${VOICE_GATEWAY_PORT:-8085}"
     env_file:
       - ./node-service/.env
     volumes:
@@ -58,8 +58,9 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['1']
+              device_ids: ['${NODE_GPU_ID:-1}']
               capabilities: [gpu]
 
 volumes:
   whisper-binaries:
+

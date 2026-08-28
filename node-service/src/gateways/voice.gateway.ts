@@ -178,13 +178,13 @@ export class VoiceGateway {
 
             // 2. Whisper переводит в текст
             const startTime = Date.now();
-            const text = await this.whisperService.transcribe(audioChunks);
+            const result = await this.whisperService.transcribe(audioChunks);
             const duration = Date.now() - startTime;
 
-            console.log(`🗣️ [Gateway] Распознано (${duration} мс): "${text}"`);
+            console.log(`🗣️ [Gateway] Распознано (${duration} мс): "${result.text}"`);
 
             // 3. Отправляем результат
-            this.sendJson(ws, { event: 'stt_result', text, executionTimeMs: duration });
+            this.sendJson(ws, { event: 'stt_result', text: result.text, executionTimeMs: duration });
 
         } catch (error) {
             console.error('❌ [Gateway] Ошибка обработки речи:', error);

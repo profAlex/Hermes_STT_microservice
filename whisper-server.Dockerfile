@@ -55,3 +55,4 @@ RUN mkdir -p /app/binaries && cp /app/whisper-cli /app/binaries/whisper-cli
 EXPOSE 8080
 
 ENTRYPOINT ["/app/whisper-server"]
+
