@@ -1,0 +1,6 @@
+name: voice_bridge
+version: 0.1.0
+description: "Voice input via Whisper and Node.js app. Голосовой ввод через Whisper и Node.js"
+author: bb
+enabled: true
+entrypoint: plugin.py
