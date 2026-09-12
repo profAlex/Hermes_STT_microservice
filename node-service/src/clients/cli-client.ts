@@ -1,3 +1,8 @@
+// tail -f /tmp/voice_node.log - для просмотра логово и дебага
+// npm run start:client - для запуска отдельно приложения-клиента
+// fuser -k 9999/tcp; pkill -f "cli-client.ts" - для сброса зависшего приложения в порту
+
+
 import WebSocket from 'ws';
 import record from 'node-record-lpcm16';
 import { exec } from 'child_process';
@@ -44,7 +49,10 @@ function showNotification(title: string, message: string): void {
 
 // --- 2. ОТПРАВКА РАСПОЗНАННОГО ТЕКСТА В PYTHON-ПЛАГИН (IPC HTTP) ---
 async function injectTextToHermes(text: string): Promise<void> {
+
+
     const trimmedText = text ? text.trim() : '';
+    console.log(`[✅ Voice Client injecting message:] ${trimmedText} `);
     if (!trimmedText) return;
 
     try {
@@ -75,6 +83,7 @@ function connectWebSocket(): void {
     ws.on('message', async (data: WebSocket.RawData) => {
         try {
             const message = JSON.parse(data.toString());
+            console.log(`[✅ Voice Client Received message...]`);
 
             // Принимаем финальное событие stt_result или fallback по полю text
             if ((message.event === 'stt_result' || message.type === 'transcription') && message.text) {

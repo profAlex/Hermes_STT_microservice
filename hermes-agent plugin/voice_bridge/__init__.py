@@ -32,6 +32,15 @@ ts_process = None
 is_recording = False
 
 
+def kill_existing_node_clients():
+    """Завершаем прошлые зависшие копии Node-клиента при перезапуске."""
+    try:
+        subprocess.run(["pkill", "-f", "cli-client.ts"], stderr=subprocess.DEVNULL)
+        log("[Voice Bridge] Terminated any old cli-client.ts processes.")
+    except Exception as e:
+        log(f"[Voice Bridge] pkill error: {e}")
+
+
 def send_toggle_to_node(action: str):
     """Передаём сигнал в запущенный Node.js процесс через STDIN или HTTP."""
     global ts_process
@@ -60,12 +69,35 @@ def send_toggle_to_node(action: str):
 
 def inject_text_into_prompt(text: str):
     """
-    Эмулирует ввод текста с клавиатуры в активную строку CLI.
+    Инжектирует текст в активный ввод CLI.
+    Использует поток-безопасный вызов call_soon_threadsafe для prompt_toolkit.
     """
     if not text:
         return
 
-    # Способ 1: Имитация ввода через termios.TIOCSTI (работает для Linux sys.stdin)
+    # Способ 1: Вставка в Event Loop prompt_toolkit через call_soon_threadsafe
+    try:
+        from prompt_toolkit.application import get_app
+        app = get_app()
+        if app:
+            def _apply_text():
+                if app.current_buffer:
+                    app.current_buffer.insert_text(text)
+                    app.invalidate()
+
+            # Правильный метод asyncio для безопасного вызова из чужого потока: call_soon_threadsafe
+            if hasattr(app, 'loop') and app.loop and app.loop.is_running():
+                app.loop.call_soon_threadsafe(_apply_text)
+                log(f"[Voice Bridge] Scheduled injection into prompt_toolkit loop: '{text}'")
+                return
+            elif app.current_buffer:
+                _apply_text()
+                log(f"[Voice Bridge] Direct injection into prompt_toolkit buffer: '{text}'")
+                return
+    except Exception as e:
+        log(f"[Voice Bridge] prompt_toolkit injection failed: {e}")
+
+    # Способ 2: Запасная эмуляция ввода через termios
     try:
         stdin_fd = sys.stdin.fileno()
         for char in text:
@@ -74,18 +106,6 @@ def inject_text_into_prompt(text: str):
         return
     except Exception as e:
         log(f"[Voice Bridge] TIOCSTI injection failed: {e}")
-
-    # Способ 2: Запасной вариант для prompt_toolkit
-    try:
-        from prompt_toolkit.application import get_app
-        app = get_app()
-        if app and app.current_buffer:
-            app.current_buffer.insert_text(text)
-            app.invalidate()
-            log(f"[Voice Bridge] Injected text via prompt_toolkit buffer")
-            return
-    except Exception as e:
-        log(f"[Voice Bridge] prompt_toolkit injection failed: {e}")
 
 
 def toggle_recording():
@@ -119,7 +139,6 @@ class VoiceInjectHandler(BaseHTTPRequestHandler):
                 text_to_inject = data.get('text', '')
                 
                 if text_to_inject:
-                    # Без sys.stdout.write! Эмулируем ввод в строку CLI
                     inject_text_into_prompt(text_to_inject)
                 
                 self.send_response(200)
@@ -140,9 +159,18 @@ class VoiceInjectHandler(BaseHTTPRequestHandler):
         return
 
 
+import socket
+
 def start_http_server():
     try:
-        server = HTTPServer((HOST, PORT), VoiceInjectHandler)
+        class ReuseHTTPServer(HTTPServer):
+            def server_bind(self):
+                # Позволяет моментально переиспользовать порт 9999 после перезапуска
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                super().server_bind()
+
+        server = ReuseHTTPServer((HOST, PORT), VoiceInjectHandler)
+        log(f"✅ HTTP Server running on {HOST}:{PORT}")
         server.serve_forever()
     except Exception as e:
         log(f"[Voice Bridge] HTTP Server error: {e}")
@@ -154,6 +182,7 @@ def start_http_server():
 def start_node_client():
     global ts_process
     
+    kill_existing_node_clients()
     log(f"Checking path: {NODE_CLIENT_PATH}")
     
     if not os.path.exists(NODE_CLIENT_PATH):
